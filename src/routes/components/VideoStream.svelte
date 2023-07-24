@@ -85,7 +85,7 @@ let timerId = setInterval(reloadIFrame,1000)
     {#if isEditing}
       <div class="ip-input-box">
         <input class="input-ip" type="input" bind:value={ipAddress} />
-        <input class="input-btn"  type="button" value="保存" on:click={toggleEditing} />
+        <button class="input-btn" on:click={toggleEditing}>保存</button>
       </div>
     {:else}
       <div class="ip-add-box" >
