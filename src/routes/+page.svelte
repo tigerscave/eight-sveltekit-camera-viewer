@@ -1,24 +1,34 @@
 <script>
-  import VideoStream from './components/VideoStream.svelte';
+  //コンポーネントデータの読み込み
+  import VideoStream from "./components/VideoStream.svelte";
+
+  //Webページの拡大・縮小
   import { browser } from "$app/environment";
-  import { onMount } from 'svelte';
-
-  let scale = getScale();
-  let ipAddressA = getIpAddress('firstIPAddress');
-  let ipAddressB = getIpAddress('secondIPAddress');
-  let ipAddressC = getIpAddress('thirdIPAddress');
-
-  let widthA = getIfrSize('firstWithValue')
-  let heightA = getIfrSize('firstHeightValue')
-  let widthB = getIfrSize('secondWithValue')
-  let heightB = getIfrSize('secondHeightValue')
-  let widthC = getIfrSize('thirdWithValue')
-  let heightC = getIfrSize('thirdHeightValue')
-
+  import { onMount } from "svelte";
+  
+  let zoomGradation = getScale();
   onMount(() => {
-    document.documentElement.style.setProperty('--scale', scale);
+    document.documentElement.style.setProperty("--scale", zoomGradation);
   });
+  
+  function changeZoom(event) {
+    if (event.target.innerHTML === "+") {
+      zoomGradation = zoomGradation + 0.1;
+    } else if (event.target.innerHTML === "-") {
+      zoomGradation = zoomGradation - 0.1;
+    }
+    document.documentElement.style.setProperty("--scale", zoomGradation);
+    if (browser) {
+      localStorage.setItem("scale", zoomGradation);
+    }
+  }
 
+  function getScale() {
+    if (browser) {
+      return parseFloat(localStorage.getItem("scale")) || 1;
+    }
+    return 1;
+  }
   function getIfrSize(key) {
     if (browser) {
       return localStorage.getItem(key);
@@ -26,71 +36,111 @@
     return null;
   }
 
+  //リロードボタン
+  let reloadMessage = false;
+  const reloadPage = () => {
+    reloadMessage = true;
+    setTimeout(() => {
+      reloadMessage = false;
+      location.reload();
+    }, 1000);
+  };
+
+  //各VideoStream関係
+  let ipAddressA = getIpAddress('firstIPAddress');
+  let widthA = getIfrSize('firstWidthValue');
+  let heightA = getIfrSize('firstHeightValue');
+
+  let ipAddressB = getIpAddress('secondIPAddress');
+  let widthB = getIfrSize('secondWidthValue');
+  let heightB = getIfrSize('secondHeightValue');
+
+  let ipAddressC = getIpAddress('thirdIPAddress');
+  let widthC = getIfrSize('thirdWidthValue');
+  let heightC = getIfrSize('thirdHeightValue');
+
   function getIpAddress(key) {
     if (browser) {
       return localStorage.getItem(key);
     }
     return null;
   }
-
-  function getScale() {
-    if (browser) {
-      return parseFloat(localStorage.getItem('scale')) || 1;
-    }
-    return 1;
-  }
-
-  function changeZoom(event) {
-    if (event.target.innerHTML === '＋') {
-      scale += 0.2;
-    } else if (event.target.innerHTML === 'ー') {
-      scale -= 0.2;
-    }
-    document.documentElement.style.setProperty('--scale', scale);
-    if (browser) {
-      localStorage.setItem('scale', scale);
-    }
-  }
 </script>
 
-<main>
-  <h1>TawaRemo Viewer TypeF {"__VERSION__"}</h1>
-  <div class="super-zoom-container">
-  <p class="super-zoom-text">画面ズームレベル：{scale.toFixed(1)}</p>
-  <button class="super-zoom-btn" on:click={changeZoom}>＋</button>
-  <button class="super-zoom-btn" on:click={changeZoom}>ー</button>
-  <button class="super-zoom-btn" on:click={() => location.reload()}>RELOAD</button>
+<body>
+  <div class="main-panel">
+    <h1>TawaRemo Viewer TypeX</h1>
+    <div class="website-zoom-label">
+      <h4>画面ズームレベル:<span>{zoomGradation.toFixed(1)}</span></h4>
+      <button on:click={changeZoom} class="resize-btn">+</button>
+      <button on:click={changeZoom} class="resize-btn">-</button>
+      <button on:click={reloadPage} class="reload-btn">Reload</button>
+      <span class="reload-text {reloadMessage ? 'appear' : ''}"
+        >リロードします</span
+      >
+    </div>
+    <VideoStream ipAddress={ipAddressA} stragekey='firstIPAddress' width={widthA} ifrstragekey='firstWidthValue' height={heightA} ifrstragekey2='firstHeightValue'/>
+    <VideoStream ipAddress={ipAddressB} stragekey='secondIPAddress' width={widthB} ifrstragekey='secondWidthValue' height={heightB} ifrstragekey2='secondHeightValue'/>
+    <VideoStream ipAddress={ipAddressC} stragekey='thirdIPAddress' width={widthC} ifrstragekey='thirdWidthValue' height={heightC} ifrstragekey2='thirdHeightValue'/>
+    <br>
+    <br>
   </div>
-  <VideoStream ipAddress={ipAddressA} stragekey='firstIPAddress' width={widthA} ifrstragekey='firstWithValue' height={heightA} ifrstragekey2='firstHeightValue'/>
-  <VideoStream ipAddress={ipAddressB} stragekey='secondIPAddress' width={widthB} ifrstragekey='secondWithValue' height={heightB} ifrstragekey2='secondHeightValue'/>
-  <VideoStream ipAddress={ipAddressC} stragekey='thirdIPAddress' width={widthC} ifrstragekey='thirdWithValue' height={heightC} ifrstragekey2='thirdHeightValue'/>
-</main>
+</body>
 
 <style>
-  h1 {
+  h1,
+  body {
+    transform-origin: top left;
+    transition: transform 0.8s ease-in-out;
     margin: 0;
   }
-  main {
+
+  .main-panel {
     color: white;
     background-color: #144998;
-    transform-origin: top left;
     transform: scale(var(--scale));
-    transition: transform 0.5s ease-in-out;
+    transform-origin: top left;
+    transition: transform 0.8s ease-in-out;
   }
-  .super-zoom-text{
-    margin: 20px;
-  }
-  .super-zoom-btn{
-    margin: 3px;
-    margin-bottom: 20px;
-    cursor        : pointer;
-    align-self:flex-end;
-    background    : white;
-    color         : #000000;
-    border: none;
-  }
-  .super-zoom-container{
+
+  /*各ラベルの表示*/
+  .website-zoom-label {
     display: flex;
-    align-items: center;
+    transform-origin: top left;
+  }
+
+  h1,h4 {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+  
+  /*拡大・縮小*/
+  .resize-btn {
+    margin-top: 1.3rem;
+    width: 2.5rem;
+    height: 1.5rem;
+    cursor: pointer;
+  }
+
+  /*リロード関係*/
+  .reload-btn {
+    margin-top: 1rem;
+    width: 3rem;
+    height: 2rem;
+    margin-left: 1rem;
+    cursor: pointer;
+    font-size: 0.7rem;
+  }
+
+  .reload-text {
+    margin-top: 1.4rem;
+    margin-left: 1rem;
+    font-size: 0.8rem;
+    opacity: 0;
+    transition: opacity 300ms;
+  }
+
+  .appear {
+    opacity: 1;
   }
 </style>
